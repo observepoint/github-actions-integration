@@ -10,6 +10,26 @@ A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD p
 - **Multi-Audit Support**: Run multiple audits simultaneously with different starting URLs
 - **PR Integration**: Works seamlessly with pull request workflows
 
+## 🔄 How It Works
+
+```mermaid
+sequenceDiagram
+    participant GH as Initial Workflow
+    participant OP as ObservePoint
+    participant CB as Callback Workflow
+    
+    GH->>OP: 1. Trigger audit with API key
+    OP->>OP: 2. Execute audit(s)
+    OP->>CB: 3. Callback with GitHub token when complete
+    CB->>CB: 4. Process results & notify
+```
+
+1. **Trigger Audit**: GitHub Action calls ObservePoint API with your audit configuration
+2. **Execute Audit**: ObservePoint runs the specified audit(s) on your URLs
+3. **Callback**: Upon completion, ObservePoint triggers your callback workflow via GitHub API
+4. **Process Results**: Your callback workflow handles the results and can notify your team
+
+
 ## 📋 Prerequisites
 
 Before getting started, ensure you have:
@@ -173,24 +193,6 @@ jobs:
 | `pr_number` | ❌ | Pull request number (if applicable) | `${{ github.event.pull_request.number }}` |
 | `commit_sha` | ❌ | Commit SHA for reference | `${{ github.sha }}` |
 
-## 🔄 How It Works
-
-```mermaid
-sequenceDiagram
-    participant GH as Initial Workflow
-    participant OP as ObservePoint
-    participant CB as Callback Workflow
-    
-    GH->>OP: 1. Trigger audit with API key
-    OP->>OP: 2. Execute audit(s)
-    OP->>CB: 3. Callback with GitHub token when complete
-    CB->>CB: 4. Process results & notify
-```
-
-1. **Trigger Audit**: GitHub Action calls ObservePoint API with your audit configuration
-2. **Execute Audit**: ObservePoint runs the specified audit(s) on your URLs
-3. **Callback**: Upon completion, ObservePoint triggers your callback workflow via GitHub API
-4. **Process Results**: Your callback workflow handles the results and can notify your team
 
 ## 🔍 Finding Your Audit ID
 
