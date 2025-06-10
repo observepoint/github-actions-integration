@@ -200,24 +200,6 @@ jobs:
 2. Navigate to your desired audit
 3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Audit not triggering:**
-- Verify your `OP_API_KEY` secret is correctly set
-- Check that the audit ID exists and is accessible with your API key
-
-**Callback not working:**
-- Ensure the PAT has been provided to ObservePoint
-- Verify the PAT has `Actions: Read and write` permissions
-- Check that the callback workflow file exists and is valid
-
-**Workflow fails:**
-- Review GitHub Actions logs for detailed error messages
-- Verify all required parameters are provided
-- Ensure the repository has Actions enabled
-
 ## 📚 Examples
 
 ### Basic Single Audit
@@ -245,6 +227,24 @@ jobs:
     callback_workflow_file: 'audit-complete.yml'
     callback_ref: 'main'
 ```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Audit not triggering:**
+- Verify your `OP_API_KEY` secret is correctly set
+- Check that the audit ID exists and is accessible with your API key
+
+**Callback not working:**
+- Ensure the PAT has been provided to ObservePoint
+- Verify the PAT has `Actions: Read and write` permissions
+- Check that the callback workflow file exists and is valid
+
+**Workflow fails:**
+- Review GitHub Actions logs for detailed error messages
+- Verify all required parameters are provided
+- Ensure the repository has Actions enabled
 
 ## 🔗 Related Resources
 
