@@ -87,8 +87,6 @@ ObservePoint needs a PAT to trigger callback workflows:
 4. Generate and copy the token
 5. **Securely provide this token to your ObservePoint administrator**
 
-> ⚠️ **Security Note**: Handle the PAT with care - it allows ObservePoint to trigger workflows in your repository.
-
 ## 🔧 Implementation
 
 ### Primary Workflow Integration
@@ -144,7 +142,7 @@ jobs:
         uses: ./.github/actions/run_observepoint_audit
         with:
           audit_ids: '230171,230172'
-          starting_urls: 'https://dominos.ua/uk/kyiv,https://dominos.ua/'
+          starting_urls: 'https://edition.cnn.com/,https://us.cnn.com/'
           OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
@@ -194,6 +192,60 @@ jobs:
       # - Fail the workflow if issues found
 ```
 
+### Complete Example Of Callback Workflow
+
+```yaml
+
+name: ObservePoint – audit complete
+
+on:
+  workflow_dispatch:
+    inputs:
+      audit_id:
+        description: "ObservePoint audit ID"
+        required: true
+      run_id:
+        description: "ObservePoint audit run ID"
+        required: true
+      alerts_triggered:
+        description: "Number of alerts triggered"
+        required: true
+        type: number
+      audit_run_ui_link:
+        description: "Link to audit run UI"
+        required: true
+      context:
+        description: "Context JSON object (repo, branch, commit hash, etc.)"
+        required: true
+
+jobs:
+  audit-complete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process audit completion
+        run: |
+          echo "🔍 Processing audit completion..."
+          echo "Audit ID: ${{ inputs.audit_id }}"
+          echo "Run ID: ${{ inputs.run_id }}"
+          echo "Alerts Triggered: ${{ inputs.alerts_triggered }}"
+          echo "Audit Run UI: ${{ inputs.audit_run_ui_link }}"
+          echo "Context: ${{ inputs.context }}"
+
+      - name: Check audit result
+        run: |
+          if [ "${{ inputs.alerts_triggered }}" -gt 0 ]; then
+            echo "❌ Audit failed - ${{ inputs.alerts_triggered }} alert(s) were triggered"
+            echo "::error::Audit ${{ inputs.audit_id }} (Run: ${{ inputs.run_id }}) failed with ${{ inputs.alerts_triggered }} alert(s)"
+            echo "::notice::View details: ${{ inputs.audit_run_ui_link }}"
+            exit 1
+          else
+            echo "✅ Audit passed – no alerts triggered"
+            echo "::notice::Audit ${{ inputs.audit_id }} (Run: ${{ inputs.run_id }}) completed successfully"
+            echo "::notice::View details: ${{ inputs.audit_run_ui_link }}"
+          fi
+
+```
+
 ## 📊 Input Parameters
 
 | Parameter | Required | Description | Example |
@@ -224,6 +276,7 @@ jobs:
 ```
 
 ### Multiple Audits with Different URLs
+
 ```yaml
 - uses: ./.github/actions/run_observepoint_audit
   with:
@@ -235,6 +288,8 @@ jobs:
     callback_workflow_file: 'audit-complete.yml'
     callback_ref: 'main'
 ```
+
+> 💡 **Note**: If multiple audits and multiple starting URLs are provided, all audits will run against all starting URLs
 
 ## 🐛 Troubleshooting
 
