@@ -39,6 +39,13 @@ Before getting started, ensure you have:
 - [ ] GitHub repository with Actions enabled
 - [ ] Repository admin access for secrets management
 
+## 🔍 Finding Your Audit ID
+
+1. Log in to ObservePoint
+2. Navigate to your desired audit
+3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
+
+
 ## ⚙️ Setup & Configuration
 
 ### Step 1: Get Your ObservePoint API Key
@@ -52,11 +59,21 @@ Before getting started, ensure you have:
 
 Store your API key securely in your repository:
 
-1. Navigate to your repository → **Settings** → **Secrets and variables** → **Actions**
-2. Click **New repository secret**
-3. Set name as `OP_API_KEY`
-4. Paste your ObservePoint API key as the value
-5. Click **Add secret**
+Store your API key securely in your repository:
+
+1. Navigate to your repository on GitHub
+2. Click on the **Settings** tab (located at the top of your repository page)
+3. In the left sidebar, scroll down to **Security** section
+4. Click **Secrets and variables**
+5. Select **Actions** from the dropdown menu
+6. You'll see the **Repository secrets** section
+7. Click the **New repository secret** button
+8. Configure the secret:
+   - **Name**: Enter `OBSERVEPOINT_API_KEY` (exactly as shown, case-sensitive)
+   - **Secret**: Paste your ObservePoint API key value
+9. Click **Add secret** to save
+
+> 💡 **Note**: Repository secrets are encrypted and only accessible to workflows running in your repository. The API key will be masked in workflow logs for security.
 
 ### Step 3: Create GitHub Personal Access Token (PAT)
 
@@ -94,11 +111,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start ObservePoint audits
-        uses: ./.github/actions/run_op_audit
+        uses: ./.github/actions/run_observepoint_audit
         with:
           audit_ids: '{{ comma-separated list of audit IDs }}'
           starting_urls: '{{ comma-separated list of starting URLs }}'
-          op_api_key: ${{ secrets.OP_API_KEY }}
+          OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
           callback_workflow_file: '{{ callback workflow filename }}'
@@ -126,11 +143,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start ObservePoint audits
-        uses: ./.github/actions/run_op_audit
+        uses: ./.github/actions/run_observepoint_audit
         with:
           audit_ids: '230171,230172'
           starting_urls: 'https://dominos.ua/uk/kyiv,https://dominos.ua/'
-          op_api_key: ${{ secrets.OP_API_KEY }}
+          OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
           callback_workflow_file: 'audit-complete.yml'
@@ -185,7 +202,7 @@ jobs:
 |-----------|----------|-------------|---------|
 | `audit_ids` | ✅ | Comma-separated list of ObservePoint audit IDs | `'230171,230172'` |
 | `starting_urls` | ✅ | Comma-separated list of URLs to audit | `'https://example.com,https://app.example.com'` |
-| `op_api_key` | ✅ | ObservePoint API key (use secret) | `${{ secrets.OP_API_KEY }}` |
+| `OBSERVEPOINT_API_KEY` | ✅ | ObservePoint API key (use secret) | `${{ secrets.OBSERVEPOINT_API_KEY }}` |
 | `callback_owner` | ✅ | GitHub repository owner | `${{ github.repository_owner }}` |
 | `callback_repo` | ✅ | Repository name | `${{ github.event.repository.name }}` |
 | `callback_workflow_file` | ✅ | Callback workflow filename | `'audit-complete.yml'` |
@@ -193,22 +210,15 @@ jobs:
 | `pr_number` | ❌ | Pull request number (if applicable) | `${{ github.event.pull_request.number }}` |
 | `commit_sha` | ❌ | Commit SHA for reference | `${{ github.sha }}` |
 
-
-## 🔍 Finding Your Audit ID
-
-1. Log in to ObservePoint
-2. Navigate to your desired audit
-3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
-
 ## 📚 Examples
 
 ### Basic Single Audit
 ```yaml
-- uses: ./.github/actions/run_op_audit
+- uses: ./.github/actions/run_observepoint_audit
   with:
     audit_ids: '230171'
     starting_urls: 'https://example.com'
-    op_api_key: ${{ secrets.OP_API_KEY }}
+    OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
     callback_owner: ${{ github.repository_owner }}
     callback_repo: ${{ github.event.repository.name }}
     callback_workflow_file: 'audit-complete.yml'
@@ -217,11 +227,11 @@ jobs:
 
 ### Multiple Audits with Different URLs
 ```yaml
-- uses: ./.github/actions/run_op_audit
+- uses: ./.github/actions/run_observepoint_audit
   with:
     audit_ids: '230171,230172,230173'
     starting_urls: 'https://example.com,https://app.example.com,https://api.example.com'
-    op_api_key: ${{ secrets.OP_API_KEY }}
+    OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
     callback_owner: ${{ github.repository_owner }}
     callback_repo: ${{ github.event.repository.name }}
     callback_workflow_file: 'audit-complete.yml'
@@ -233,7 +243,7 @@ jobs:
 ### Common Issues
 
 **Audit not triggering:**
-- Verify your `OP_API_KEY` secret is correctly set
+- Verify your `OBSERVEPOINT_API_KEY` secret is correctly set
 - Check that the audit ID exists and is accessible with your API key
 
 **Callback not working:**

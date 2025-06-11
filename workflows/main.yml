@@ -53,7 +53,7 @@ jobs:
         with:
           audit_ids: '230171'
           starting_urls: 'https://dominos.ua/uk/kyiv,https://dominos.ua/'
-          op_api_key: ${{ secrets.OP_API_KEY }}
+          observepoint_api_key: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
           callback_workflow_file: 'audit-complete.yml'

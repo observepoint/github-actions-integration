@@ -26,7 +26,7 @@ inputs:
     required: true
 
   # ObservePoint API key stored in repo / org secrets
-  op_api_key:
+  observepoint_api_key:
     description: 'API key for ObservePoint.'
     required: true
 
@@ -96,7 +96,7 @@ runs:
           # POST to the v3 API -------------------------------------------------
           http_code=$(curl -s -w "%{http_code}" -o response.json \
             -X POST "https://app.observepointstaging.com/api/v3/web-audits/${audit_id}/runs" \
-            -H "Authorization: api_key ${{ inputs.op_api_key }}" \
+            -H "Authorization: api_key ${{ inputs.observepoint_api_key }}" \
             -H "Content-Type: application/json" \
             --data "${payload}")
 
