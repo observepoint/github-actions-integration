@@ -59,8 +59,6 @@ Before getting started, ensure you have:
 
 Store your API key securely in your repository:
 
-Store your API key securely in your repository:
-
 1. Navigate to your repository on GitHub
 2. Click on the **Settings** tab (located at the top of your repository page)
 3. In the left sidebar, scroll down to **Security** section
