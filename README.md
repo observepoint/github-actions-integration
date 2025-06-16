@@ -13,9 +13,9 @@ A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD p
 
 ```mermaid
 sequenceDiagram
-    participant GH as Initial Workflow
+    participant GH as Your Workflow
     participant OP as ObservePoint
-    participant CB as Callback Workflow
+    participant CB as Your Callback Workflow
     
     GH->>OP: 1. Trigger audit with API key
     OP->>OP: 2. Execute audit
