@@ -2,8 +2,8 @@
 name: ObservePoint Audit (v3)
 
 description: |
-  Starts ObservePoint web‑audits through the v3 API and checks
-  that each audit run is successfully created. Sends rich
+  Starts an ObservePoint web‑audit through the v3 API and checks
+  that the audit run is successfully created. Sends rich
   callbackContext data so that a downstream workflow_dispatch
   can process completion callbacks.
 
@@ -16,17 +16,17 @@ inputs:
     required: false
     default: ''
 
-  audit_ids:
-    description: 'Comma‑separated list of audit IDs to start.'
+  audit_id:
+    description: 'Audit ID to start.'
     required: true
 
-  # The initial URL(s) for each audit. Comma‑separated.
+  # The initial URL(s) for the audit. Comma‑separated.
   starting_urls:
     description: 'Comma‑separated list of starting URLs passed to startingUrls.'
     required: true
 
   # ObservePoint API key stored in repo / org secrets
-  observepoint_api_key:
+  op_api_key:
     description: 'API key for ObservePoint.'
     required: true
 
@@ -42,6 +42,10 @@ inputs:
   callback_ref:
     description: 'Git ref (branch) to run the downstream workflow on.'
     required: true
+  # Personal‑access token / GITHUB_TOKEN with workflow‑dispatch:write (still needed by the callback)
+  callback_token:
+    description: 'GitHub token used by ObservePoint callback to dispatch the workflow.'
+    required: true
 
   commit_sha:
     description: 'Commit SHA to set status against (optional in v3; still forwarded for traceability).'
@@ -54,63 +58,56 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - id: start-audits
-      name: Start ObservePoint Audits (v3)
+    - id: start-audit
+      name: Start ObservePoint Audit (v3)
       shell: bash
       run: |
         set -euo pipefail
 
-        # Split comma‑separated inputs into arrays
-        IFS=',' read -r -a audit_ids          <<< "${{ inputs.audit_ids }}"
+        # Split comma‑separated starting URLs into array
         IFS=',' read -r -a starting_urls_list <<< "${{ inputs.starting_urls }}"
 
-        # Build JSON array for startingUrls once; reused for every audit
+        # Build JSON array for startingUrls
         starting_urls_json=$(printf '%s\n' "${starting_urls_list[@]}" | jq -R . | jq -s .)
 
-        fail_flag=0
+        audit_id="${{ inputs.audit_id }}"
+        echo "📣 Triggering audit ID ${audit_id} …"
 
-        for audit_id in "${audit_ids[@]}"; do
-          echo "📣 Triggering audit ID ${audit_id} …"
+        # Construct payload for v3 endpoint ---------------------------------
+        payload=$(jq -n \
+          --argjson startingUrls "${starting_urls_json}" \
+          --arg owner          "${{ inputs.callback_owner }}" \
+          --arg repo           "${{ inputs.callback_repo }}" \
+          --arg workflow_file  "${{ inputs.callback_workflow_file }}" \
+          --arg ref            "${{ inputs.callback_ref }}" \
+          --arg cb_token       "${{ inputs.callback_token }}" \
+          --arg pr             "${{ inputs.pr_number }}" \
+          --arg commitSha      "${{ inputs.commit_sha }}" \
+          '{
+            startingUrls: $startingUrls,
+            callbackContext: {
+              owner:          $owner,
+              repo:           $repo,
+              workflow_file:  $workflow_file,
+              ref:            $ref,
+              callbackToken:  $cb_token,
+              prNumber:       $pr,
+              commitSha:      $commitSha
+            }
+          }')
 
-          payload=$(jq -n \
-            --argjson startingUrls "${starting_urls_json}" \
-            --arg owner          "${{ inputs.callback_owner }}" \
-            --arg repo           "${{ inputs.callback_repo }}" \
-            --arg workflow_file  "${{ inputs.callback_workflow_file }}" \
-            --arg ref            "${{ inputs.callback_ref }}" \
-            --arg pr             "${{ inputs.pr_number }}" \
-            --arg commitSha      "${{ inputs.commit_sha }}" \
-            '{
-              startingUrls: $startingUrls,
-              callbackContext: {
-                owner:          $owner,
-                repo:           $repo,
-                workflow_file:  $workflow_file,
-                ref:            $ref,
-                callbackToken:  $cb_token,
-                prNumber:       $pr,
-                commitSha:      $commitSha
-              }
-            }')
+        # POST to the v3 API -------------------------------------------------
+        http_code=$(curl -s -w "%{http_code}" -o response.json \
+          -X POST "https://app.observepointstaging.com/api/v3/web-audits/${audit_id}/runs" \
+          -H "Authorization: api_key ${{ inputs.op_api_key }}" \
+          -H "Content-Type: application/json" \
+          --data "${payload}")
 
-          # POST to the v3 API -------------------------------------------------
-          http_code=$(curl -s -w "%{http_code}" -o response.json \
-            -X POST "https://app.observepointstaging.com/api/v3/web-audits/${audit_id}/runs" \
-            -H "Authorization: api_key ${{ inputs.observepoint_api_key }}" \
-            -H "Content-Type: application/json" \
-            --data "${payload}")
-
-          # Handle response ----------------------------------------------------
-          if [[ "${http_code}" =~ ^[45] ]]; then
-            echo "❌ Failed to start audit ${audit_id} (HTTP ${http_code})"
-            cat response.json || true
-            fail_flag=1
-          else
-            echo "✅ Audit ${audit_id} started successfully (HTTP ${http_code})."
-          fi
-        done
-
-        if [[ ${fail_flag} -ne 0 ]]; then
-          echo "🚨 One or more audits failed to start."
+        # Handle response ----------------------------------------------------
+        if [[ "${http_code}" =~ ^[45] ]]; then
+          echo "❌ Failed to start audit ${audit_id} (HTTP ${http_code})"
+          cat response.json || true
           exit 1
+        else
+          echo "✅ Audit ${audit_id} started successfully (HTTP ${http_code})."
         fi

@@ -7,7 +7,6 @@ A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD p
 - **Automated Audit Execution**: Trigger ObservePoint audits directly from your GitHub workflows
 - **Secure Integration**: Uses encrypted secrets and fine-grained permissions
 - **Callback Support**: Automatically triggers follow-up workflows when audits complete
-- **Multi-Audit Support**: Run multiple audits simultaneously with different starting URLs
 - **PR Integration**: Works seamlessly with pull request workflows
 
 ## 🔄 How It Works
@@ -19,13 +18,13 @@ sequenceDiagram
     participant CB as Callback Workflow
     
     GH->>OP: 1. Trigger audit with API key
-    OP->>OP: 2. Execute audit(s)
+    OP->>OP: 2. Execute audit
     OP->>CB: 3. Callback with GitHub token when complete
     CB->>CB: 4. Process results & notify
 ```
 
 1. **Trigger Audit**: GitHub Action calls ObservePoint API with your audit configuration
-2. **Execute Audit**: ObservePoint runs the specified audit(s) on your URLs
+2. **Execute Audit**: ObservePoint runs the specified audit on your URLs
 3. **Callback**: Upon completion, ObservePoint triggers your callback workflow via GitHub API
 4. **Process Results**: Your callback workflow handles the results and can notify your team
 
@@ -35,7 +34,7 @@ sequenceDiagram
 Before getting started, ensure you have:
 
 - [ ] Active ObservePoint account with API access
-- [ ] ObservePoint Audit ID(s) - found in the URL of your audit's page
+- [ ] ObservePoint Audit ID - found in the URL of your audit's page
 - [ ] GitHub repository with Actions enabled
 - [ ] Repository admin access for secrets management
 
@@ -80,10 +79,10 @@ ObservePoint needs a PAT to trigger callback workflows:
 1. Go to GitHub **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens**
 2. Click **Generate new token**
 3. Configure the token:
-    - **Name**: `ObservePoint Callback PAT`
-    - **Repository access**: Select your target repository only
-    - **Repository permissions**:
-        - Actions: **Read and write** ✅
+   - **Name**: `ObservePoint Callback PAT`
+   - **Repository access**: Select your target repository only
+   - **Repository permissions**:
+      - Actions: **Read and write** ✅
 4. Generate and copy the token
 5. **Securely provide this token to your ObservePoint administrator**
 
@@ -97,8 +96,8 @@ Add this job to your existing CI/CD workflow (e.g., `.github/workflows/ci.yml`):
 jobs:
   # ... your existing jobs ...
   
-  run_observepoint_audits:
-    name: Run ObservePoint Audits
+  run_observepoint_audit:
+    name: Run ObservePoint Audit
     runs-on: ubuntu-latest
     needs:
       - deploy  # Replace with your deployment job name
@@ -106,10 +105,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Start ObservePoint audits
+      - name: Start ObservePoint audit
         uses: ./.github/actions/run_observepoint_audit
         with:
-          audit_ids: '{{ comma-separated list of audit IDs }}'
+          audit_id: '{{ your audit ID }}'
           starting_urls: '{{ comma-separated list of starting URLs }}'
           OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
@@ -129,8 +128,8 @@ jobs:
     runs-on: ubuntu-latest
     # ... deployment steps ...
 
-  run_observepoint_audits:
-    name: Run ObservePoint Audits
+  run_observepoint_audit:
+    name: Run ObservePoint Audit
     runs-on: ubuntu-latest
     needs:
       - deploy
@@ -138,10 +137,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Start ObservePoint audits
+      - name: Start ObservePoint audit
         uses: ./.github/actions/run_observepoint_audit
         with:
-          audit_ids: '230171,230172'
+          audit_id: '230171'
           starting_urls: 'https://edition.cnn.com/,https://us.cnn.com/'
           OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
@@ -195,7 +194,6 @@ jobs:
 ### Complete Example Of Callback Workflow
 
 ```yaml
-
 name: ObservePoint – audit complete
 
 on:
@@ -243,14 +241,13 @@ jobs:
             echo "::notice::Audit ${{ inputs.audit_id }} (Run: ${{ inputs.run_id }}) completed successfully"
             echo "::notice::View details: ${{ inputs.audit_run_ui_link }}"
           fi
-
 ```
 
 ## 📊 Input Parameters
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| `audit_ids` | ✅ | Comma-separated list of ObservePoint audit IDs | `'230171,230172'` |
+| `audit_id` | ✅ | ObservePoint audit ID | `'230171'` |
 | `starting_urls` | ✅ | Comma-separated list of URLs to audit | `'https://example.com,https://app.example.com'` |
 | `OBSERVEPOINT_API_KEY` | ✅ | ObservePoint API key (use secret) | `${{ secrets.OBSERVEPOINT_API_KEY }}` |
 | `callback_owner` | ✅ | GitHub repository owner | `${{ github.repository_owner }}` |
@@ -266,7 +263,7 @@ jobs:
 ```yaml
 - uses: ./.github/actions/run_observepoint_audit
   with:
-    audit_ids: '230171'
+    audit_id: '230171'
     starting_urls: 'https://example.com'
     OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
     callback_owner: ${{ github.repository_owner }}
@@ -275,12 +272,12 @@ jobs:
     callback_ref: 'main'
 ```
 
-### Multiple Audits with Different URLs
+### Single Audit with Multiple URLs
 
 ```yaml
 - uses: ./.github/actions/run_observepoint_audit
   with:
-    audit_ids: '230171,230172,230173'
+    audit_id: '230171'
     starting_urls: 'https://example.com,https://app.example.com,https://api.example.com'
     OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
     callback_owner: ${{ github.repository_owner }}
@@ -289,7 +286,7 @@ jobs:
     callback_ref: 'main'
 ```
 
-> 💡 **Note**: If multiple audits and multiple starting URLs are provided, all audits will run against all starting URLs
+> 💡 **Note**: The audit will run against all provided starting URLs
 
 ## 🐛 Troubleshooting
 
