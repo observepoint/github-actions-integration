@@ -119,7 +119,7 @@ jobs:
           commit_sha: ${{ github.sha }}
 ```
 
-### Complete Example
+### Complete Example of Primary Workflow configuration
 
 ```yaml
 jobs:
@@ -141,7 +141,7 @@ jobs:
         uses: ./.github/actions/run_observepoint_audit
         with:
           audit_id: '230171'
-          starting_urls: 'https://edition.cnn.com/,https://us.cnn.com/'
+          starting_urls: 'https://app.example.com/,https://api.example.com/'
           OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
