@@ -1,0 +1,31 @@
+name: ObservePoint – audit complete
+
+on:
+  repository_dispatch:
+    types: [observepoint-audit-complete]
+
+jobs:
+  audit-complete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process audit completion
+        run: |
+          echo "🔍 Processing audit completion..."
+          echo "Audit ID: ${{ github.event.client_payload.audit_id }}"
+          echo "Run ID: ${{ github.event.client_payload.run_id }}"
+          echo "Alerts Triggered: ${{ github.event.client_payload.alerts_triggered }}"
+          echo "Audit Run UI: ${{ github.event.client_payload.audit_run_ui_link }}"
+          echo "Context: ${{ github.event.client_payload.context }}"
+
+      - name: Check audit result
+        run: |
+          if [ "${{ github.event.client_payload.alerts_triggered }}" -gt 0 ]; then
+            echo "❌ Audit failed - ${{ github.event.client_payload.alerts_triggered }} alert(s) were triggered"
+            echo "::error::Audit ${{ github.event.client_payload.audit_id }} (Run: ${{ github.event.client_payload.run_id }}) failed with ${{ github.event.client_payload.alerts_triggered }} alert(s)"
+            echo "::notice::View details: ${{ github.event.client_payload.audit_run_ui_link }}"
+            exit 1
+          else
+            echo "✅ Audit passed – no alerts triggered"
+            echo "::notice::Audit ${{ github.event.client_payload.audit_id }} (Run: ${{ github.event.client_payload.run_id }}) completed successfully"
+            echo "::notice::View details: ${{ github.event.client_payload.audit_run_ui_link }}"
+          fi

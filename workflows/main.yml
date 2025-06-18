@@ -56,7 +56,7 @@ jobs:
           op_api_key: ${{ secrets.OP_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
-          callback_workflow_file: 'audit-complete.yml'
+          callback_event_type: 'observepoint-audit-complete'
           callback_ref: 'main'
           callback_token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.pull_request.number }}

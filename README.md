@@ -6,7 +6,7 @@ A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD p
 
 - **Automated Audit Execution**: Trigger ObservePoint audits directly from your GitHub workflows
 - **Secure Integration**: Uses encrypted secrets and fine-grained permissions
-- **Callback Support**: Automatically triggers follow-up workflows when audits complete
+- **Callback Support**: Automatically triggers follow-up workflows when audits complete via repository dispatch
 - **PR Integration**: Works seamlessly with pull request workflows
 
 ## 🔄 How It Works
@@ -19,13 +19,13 @@ sequenceDiagram
     
     GH->>OP: 1. Trigger audit with API key
     OP->>OP: 2. Execute audit
-    OP->>CB: 3. Callback with GitHub token when complete
+    OP->>CB: 3. Repository dispatch when complete
     CB->>CB: 4. Process results & notify
 ```
 
 1. **Trigger Audit**: GitHub Action calls ObservePoint API with your audit configuration
 2. **Execute Audit**: ObservePoint runs the specified audit on your URLs
-3. **Callback**: Upon completion, ObservePoint triggers your callback workflow via GitHub API
+3. **Repository Dispatch**: Upon completion, ObservePoint triggers your callback workflow via GitHub repository dispatch event
 4. **Process Results**: Your callback workflow handles the results and can notify your team
 
 
@@ -74,7 +74,7 @@ Store your API key securely in your repository:
 
 ### Step 3: Create GitHub Personal Access Token (PAT)
 
-ObservePoint needs a PAT to trigger callback workflows:
+ObservePoint needs a PAT to trigger callback workflows via repository dispatch:
 
 1. Go to GitHub **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens**
 2. Click **Generate new token**
@@ -82,9 +82,12 @@ ObservePoint needs a PAT to trigger callback workflows:
    - **Name**: `ObservePoint Callback PAT`
    - **Repository access**: Select your target repository only
    - **Repository permissions**:
-      - Actions: **Read and write** ✅
+      - Contents: **Read** ✅ (required for repository dispatch)
+      - Metadata: **Read** ✅ (required for repository dispatch)
 4. Generate and copy the token
 5. **Securely provide this token to your ObservePoint administrator**
+
+> 💡 **Note**: Repository dispatch requires fewer permissions than workflow dispatch, making it more secure. Only Contents and Metadata read permissions are needed.
 
 ## 🔧 Implementation
 
@@ -113,7 +116,7 @@ jobs:
           OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
-          callback_workflow_file: '{{ callback workflow filename }}'
+          callback_event_type: '{{ custom event type }}'
           callback_ref: '{{ target branch }}'
           pr_number: ${{ github.event.pull_request.number }}
           commit_sha: ${{ github.sha }}
@@ -145,7 +148,7 @@ jobs:
           OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
-          callback_workflow_file: 'audit-complete.yml'
+          callback_event_type: 'observepoint-audit-complete'
           callback_ref: 'main'
           pr_number: ${{ github.event.pull_request.number }}
           commit_sha: ${{ github.sha }}
@@ -153,22 +156,14 @@ jobs:
 
 ### Callback Workflow
 
-Create `.github/workflows/audit-complete.yml` to handle audit completion:
+Create `.github/workflows/audit-complete.yml` to handle audit completion via repository dispatch:
 
 ```yaml
 name: Audit Complete Handler
 
 on:
-  workflow_dispatch:
-    inputs:
-      audit_results:
-        description: 'ObservePoint audit results'
-        required: true
-        type: string
-      pr_number:
-        description: 'Pull request number'
-        required: false
-        type: string
+  repository_dispatch:
+    types: [observepoint-audit-complete]
 
 jobs:
   process_results:
@@ -181,7 +176,8 @@ jobs:
       - name: Process audit results
         run: |
           echo "Audit completed!"
-          echo "Results: ${{ github.event.inputs.audit_results }}"
+          echo "Event Type: ${{ github.event.action }}"
+          echo "Client Payload: ${{ toJson(github.event.client_payload) }}"
           
       # Add your custom result processing logic here
       # Examples:
@@ -197,24 +193,8 @@ jobs:
 name: ObservePoint – audit complete
 
 on:
-  workflow_dispatch:
-    inputs:
-      audit_id:
-        description: "ObservePoint audit ID"
-        required: true
-      run_id:
-        description: "ObservePoint audit run ID"
-        required: true
-      alerts_triggered:
-        description: "Number of alerts triggered"
-        required: true
-        type: number
-      audit_run_ui_link:
-        description: "Link to audit run UI"
-        required: true
-      context:
-        description: "Context JSON object (repo, branch, commit hash, etc.)"
-        required: true
+  repository_dispatch:
+    types: [observepoint-audit-complete]
 
 jobs:
   audit-complete:
@@ -223,23 +203,23 @@ jobs:
       - name: Process audit completion
         run: |
           echo "🔍 Processing audit completion..."
-          echo "Audit ID: ${{ inputs.audit_id }}"
-          echo "Run ID: ${{ inputs.run_id }}"
-          echo "Alerts Triggered: ${{ inputs.alerts_triggered }}"
-          echo "Audit Run UI: ${{ inputs.audit_run_ui_link }}"
-          echo "Context: ${{ inputs.context }}"
+          echo "Audit ID: ${{ github.event.client_payload.audit_id }}"
+          echo "Run ID: ${{ github.event.client_payload.run_id }}"
+          echo "Alerts Triggered: ${{ github.event.client_payload.alerts_triggered }}"
+          echo "Audit Run UI: ${{ github.event.client_payload.audit_run_ui_link }}"
+          echo "Context: ${{ toJson(github.event.client_payload.context) }}"
 
       - name: Check audit result
         run: |
-          if [ "${{ inputs.alerts_triggered }}" -gt 0 ]; then
-            echo "❌ Audit failed - ${{ inputs.alerts_triggered }} alert(s) were triggered"
-            echo "::error::Audit ${{ inputs.audit_id }} (Run: ${{ inputs.run_id }}) failed with ${{ inputs.alerts_triggered }} alert(s)"
-            echo "::notice::View details: ${{ inputs.audit_run_ui_link }}"
+          if [ "${{ github.event.client_payload.alerts_triggered }}" -gt 0 ]; then
+            echo "❌ Audit failed - ${{ github.event.client_payload.alerts_triggered }} alert(s) were triggered"
+            echo "::error::Audit ${{ github.event.client_payload.audit_id }} (Run: ${{ github.event.client_payload.run_id }}) failed with ${{ github.event.client_payload.alerts_triggered }} alert(s)"
+            echo "::notice::View details: ${{ github.event.client_payload.audit_run_ui_link }}"
             exit 1
           else
             echo "✅ Audit passed – no alerts triggered"
-            echo "::notice::Audit ${{ inputs.audit_id }} (Run: ${{ inputs.run_id }}) completed successfully"
-            echo "::notice::View details: ${{ inputs.audit_run_ui_link }}"
+            echo "::notice::Audit ${{ github.event.client_payload.audit_id }} (Run: ${{ github.event.client_payload.run_id }}) completed successfully"
+            echo "::notice::View details: ${{ github.event.client_payload.audit_run_ui_link }}"
           fi
 ```
 
@@ -252,7 +232,7 @@ jobs:
 | `OBSERVEPOINT_API_KEY` | ✅ | ObservePoint API key (use secret) | `${{ secrets.OBSERVEPOINT_API_KEY }}` |
 | `callback_owner` | ✅ | GitHub repository owner | `${{ github.repository_owner }}` |
 | `callback_repo` | ✅ | Repository name | `${{ github.event.repository.name }}` |
-| `callback_workflow_file` | ✅ | Callback workflow filename | `'audit-complete.yml'` |
+| `callback_event_type` | ✅ | Repository dispatch event type | `'observepoint-audit-complete'` |
 | `callback_ref` | ✅ | Branch/ref for callback | `'main'` |
 | `pr_number` | ❌ | Pull request number (if applicable) | `${{ github.event.pull_request.number }}` |
 | `commit_sha` | ❌ | Commit SHA for reference | `${{ github.sha }}` |
@@ -268,7 +248,7 @@ jobs:
     OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
     callback_owner: ${{ github.repository_owner }}
     callback_repo: ${{ github.event.repository.name }}
-    callback_workflow_file: 'audit-complete.yml'
+    callback_event_type: 'observepoint-audit-complete'
     callback_ref: 'main'
 ```
 
@@ -282,7 +262,7 @@ jobs:
     OBSERVEPOINT_API_KEY: ${{ secrets.OBSERVEPOINT_API_KEY }}
     callback_owner: ${{ github.repository_owner }}
     callback_repo: ${{ github.event.repository.name }}
-    callback_workflow_file: 'audit-complete.yml'
+    callback_event_type: 'observepoint-audit-complete'
     callback_ref: 'main'
 ```
 
@@ -298,19 +278,22 @@ jobs:
 
 **Callback not working:**
 - Ensure the PAT has been provided to ObservePoint
-- Verify the PAT has `Actions: Read and write` permissions
-- Check that the callback workflow file exists and is valid
+- Verify the PAT has `Contents: Read` and `Metadata: Read` permissions
+- Check that the callback workflow file exists and listens for the correct `repository_dispatch` event type
+- Ensure the event type in your callback workflow matches the `callback_event_type` parameter
 
 **Workflow fails:**
 - Review GitHub Actions logs for detailed error messages
 - Verify all required parameters are provided
 - Ensure the repository has Actions enabled
+- Check that client payload data is being accessed correctly using `github.event.client_payload`
 
 ## 🔗 Related Resources
 
 - [ObservePoint API Documentation](https://developer.observepoint.com/)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Example Callback Workflow](./workflows/audit-complete.yml)
+- [GitHub Repository Dispatch Documentation](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
+- [Example Callback Workflow](./workflows/observepoint-audit-complete.yml)
 
 ## 📞 Support
 
