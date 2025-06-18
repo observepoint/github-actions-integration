@@ -84,7 +84,7 @@ runs:
           --arg commitSha                 "${{ inputs.commit_sha }}" \
           '{
             startingUrls: $startingUrls,
-            callbackWorkflowEventType: callbackWorkflowEventType,
+            callbackWorkflowEventType: $callbackWorkflowEventType,
             callbackContext: {
               owner:          $owner,
               repo:           $repo,
