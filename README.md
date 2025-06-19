@@ -56,13 +56,13 @@ sequenceDiagram
 
 ## ⚙️Setup & Configuration
 
-\###1·Generate an ObservePointAPIKey
+### 1·Generate an ObservePointAPIKey
 
 1. Log in to ObservePoint.
 2. Open **Profile & Permissions.
 3. Generate a new key or copy an existing one.
 
-\###2·Add the APIKey as a GitHubSecret
+### 2·Add the APIKey as a GitHubSecret
 
 > **Case matters.**The key must be stored as `observepoint_api_key` (lower‑case) to match the action’s input name.
 
@@ -72,7 +72,7 @@ sequenceDiagram
    **Secret**: *paste the APIkey value*.
 4. Click **Addsecret**.
 
-\###3·Create a Fine‑GrainedPAT for Callbacks
+### 3·Create a Fine‑GrainedPAT for Callbacks
 
 ObservePoint uses a PAT to dispatch the callback; it needs only minimal scope.
 
@@ -242,7 +242,7 @@ jobs:
 
 ## 📚Usage Examples
 
-\###Single Audit, Single URL
+### Single Audit, Single URL
 
 ```yaml
 - uses: ./.github/actions/run_observepoint_audit
@@ -256,7 +256,7 @@ jobs:
     callback_ref: 'main'
 ```
 
-\###Single Audit, Multiple URLs & Custom Context
+### Single Audit, Multiple URLs & Custom Context
 
 ```yaml
 - uses: ./.github/actions/run_observepoint_audit
