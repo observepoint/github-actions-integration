@@ -4,32 +4,31 @@ A GitHubAction that seamlessly integrates ObservePoint web‑audits into your CI
 
 ---
 
-## 🚀Features
+## 🚀 Features
 
-* **AutomatedAudit Execution**– start ObservePoint audits directly from your GitHub workflows.
-* **Secure Integration**– leverages encrypted secrets and fine‑grained permissions only (no full‑repo PATs required).
-* **Rich Callback Context**– passes detailed `callbackContext` data (PR, commit, env, etc.) to your callback workflow via **repository\_dispatch**.
-* **PR Integration**– fits naturally into pull‑request pipelines and can update PR status/comments on completion.
-
----
+- **Automated Audit Execution**: Trigger ObservePoint audits directly from your GitHub workflows
+- **Secure Integration**: Uses encrypted secrets and fine-grained permissions
+- **Callback Support**: Automatically triggers follow-up workflows when audits complete via repository dispatch
+- **PR Integration**: Works seamlessly with pull request workflows
 
 ## 🔄How It Works
 
 ```mermaid
 sequenceDiagram
     participant GH as Your Workflow
-    participant OP as ObservePoint (v3 API)
+    participant OP as ObservePoint
     participant CB as Your Callback Workflow
+    
     GH->>OP: 1. Trigger audit with API key
     OP->>OP: 2. Execute audit
     OP->>CB: 3. repository_dispatch when complete
     CB->>CB: 4. Process results & notify
 ```
 
-1. **Trigger Audit**– the action calls the ObservePointv3API with your audit settings.
-2. **Execute Audit**– ObservePoint runs the audit against the supplied starting URLs.
-3. **Repository Dispatch**– on completion, ObservePoint fires a `repository_dispatch` event (using your PAT) containing all audit metadata plus your custom `callbackContext`.
-4. **Process Results**– your callback workflow analyses the payload, notifies teams, updates PRs, fails/approves builds, etc.
+1. **Trigger Audit**: GitHub Action calls ObservePoint API with your audit configuration
+2. **Execute Audit**: ObservePoint runs the specified audit on your URLs
+3. **Repository Dispatch**: Upon completion, ObservePoint triggers your callback workflow via GitHub repository dispatch event
+4. **Process Results**: Your callback workflow handles the results and can notify your team
 
 ---
 
