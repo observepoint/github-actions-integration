@@ -64,7 +64,7 @@ sequenceDiagram
 
 ### 2·Add the APIKey as a GitHubSecret
 
-> **Case matters.**The key must be stored as `observepoint_api_key` (lower‑case) to match the action’s input name.
+> **Case matters.** The key must be stored as `observepoint_api_key` (lower‑case) to match the action’s input name.
 
 1. Go to **Repo→ Settings→Security→Secrets and Variables→Actions**.
 2. Click **Newrepository secret**.
