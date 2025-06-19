@@ -1,8 +1,6 @@
-# ObservePoint GitHubActions Integration (v3)
+# ObservePoint GitHub Actions Integration
 
-A GitHubAction that seamlessly integrates ObservePoint web‑audits into your CI/CD pipeline via the **v3** API, automatically triggering audits and forwarding rich context to downstream workflows.
-
----
+A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD pipeline, automatically triggering audits and handling results through callback workflows.
 
 ## 🚀 Features
 
@@ -110,7 +108,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Start ObservePoint audit (v3)
+      - name: Start ObservePoint audit
         uses: ./.github/actions/run_observepoint_audit
         with:
           audit_id: 'YOUR_AUDIT_ID'
@@ -167,7 +165,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start ObservePoint audit (v3)
+      - name: Start ObservePoint audit
         uses: ./.github/actions/run_observepoint_audit
         with:
           audit_id: '1149283'
