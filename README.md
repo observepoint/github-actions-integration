@@ -34,46 +34,47 @@ sequenceDiagram
 
 ## 📋Prerequisites
 
-* [ ] Active ObservePoint account **with v3 API access**
-* [ ] AuditID of the web‑audit you want to run
-* [ ] GitHubrepository with Actions enabled
-* [ ] Repository admin rights (to add secrets & fine‑grained PAT)
+Before getting started, ensure you have:
 
----
+- [ ] Active ObservePoint account with API access
+- [ ] ObservePoint Audit ID - found in the URL of your audit's page
+- [ ] GitHub repository with Actions enabled
+- [ ] Repository admin access for secrets management
 
-## 🔍Finding Your AuditID
+## 🔍 Finding Your Audit ID
 
-1. Log in to ObservePoint.
-2. Navigate to the audit you wish to run.
-3. The AuditID is the final segment in the URL:
+1. Log in to ObservePoint
+2. Navigate to your desired audit
+3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
 
-   ```text
-   https://app.observepoint.com/audits/{AUDIT_ID}
-   ```
 
----
+## ⚙️ Setup & Configuration
 
-## ⚙️Setup & Configuration
-
-### 1·Generate an ObservePointAPIKey
+### Step 1: Get Your ObservePoint API Key
 
 1. Log in to ObservePoint.
-2. Open **Profile & Permissions.
+2. Open "Profile & Permissions".
 3. Generate a new key or copy an existing one.
 
-### 2·Add the APIKey as a GitHubSecret
+### Step 2: Configure GitHub Secrets
 
-> **Case matters.** The key must be stored as `observepoint_api_key` (lower‑case) to match the action’s input name.
+Store your API key securely in your repository:
 
-1. Go to **Repo→ Settings→Security→Secrets and Variables→Actions**.
-2. Click **Newrepository secret**.
-3. **Name**: `observepoint_api_key`
-   **Secret**: *paste the APIkey value*.
-4. Click **Addsecret**.
+1. Navigate to your repository on GitHub
+2. Click on the **Settings** tab (located at the top of your repository page)
+3. In the left sidebar, scroll down to **Security** section
+4. Click **Secrets and variables**
+5. Select **Actions** from the dropdown menu
+6. You'll see the **Repository secrets** section
+7. Click the **New repository secret** button
+8. Configure the secret:
+   - **Name**: Enter `OBSERVEPOINT_API_KEY` (exactly as shown, case-sensitive)
+   - **Secret**: Paste your ObservePoint API key value
+9. Click **Add secret** to save
 
-### 3·Create a Fine‑GrainedPAT for Callbacks
+> 💡 **Note**: Repository secrets are encrypted and only accessible to workflows running in your repository. The API key will be masked in workflow logs for security.
 
-ObservePoint uses a PAT to dispatch the callback; it needs only minimal scope.
+### Step 3: Create GitHub Personal Access Token (PAT)
 
 1. **GitHub→ Settings → Developersettings → Personal access tokens → Fine‑grained tokens**.
 2. **Generate new token**.
@@ -186,7 +187,7 @@ jobs:
 
 ### Callback Workflow
 
-Save as `.github/workflows/audit-complete.yml`:
+Create `.github/workflows/audit-complete.yml` to handle audit completion via repository dispatch:
 
 ```yaml
 name: Audit Complete Handler
@@ -270,45 +271,40 @@ jobs:
     callback_context_json: '{"env":"prod","deploymentId":"42"}'
 ```
 
-> 💡The audit runs against **all** provided URLs, and your custom JSON is merged into the callback payload.
+> 💡 **Note**: The audit will run against all provided starting URLs
 
----
+## 🐛 Troubleshooting
 
-## 🐛Troubleshooting
+### Common Issues
 
-### Audit not starting
+**Audit not triggering:**
+- Verify your `OBSERVEPOINT_API_KEY` secret is correctly set
+- Check that the audit ID exists and is accessible with your API key
 
-* Ensure `observepoint_api_key` secret exists and is valid.
-* Confirm the audit ID exists and belongs to your account.
-* Check workflow logs for HTTP4xx/5xx responses.
+**Callback not working:**
+- Ensure the PAT has been provided to ObservePoint
+- Verify the PAT has `Contents: Read` and `Metadata: Read` permissions
+- Check that the callback workflow file exists and listens for the correct `repository_dispatch` event type
+- Ensure the event type in your callback workflow matches the `callback_event_type` parameter
 
-### Callback not received
+**Workflow fails:**
+- Review GitHub Actions logs for detailed error messages
+- Verify all required parameters are provided
+- Ensure the repository has Actions enabled
+- Check that client payload data is being accessed correctly using `github.event.client_payload`
 
-* Verify the PAT was registered with ObservePoint.
-* Confirm the PAT has **Contents/ Metadata***read* scopes only.
-* Ensure the callback workflow listens for the exact `callback_event_type`.
+## 🔗 Related Resources
 
-### Workflow failures
+- [ObservePoint API Documentation](https://developer.observepoint.com/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [GitHub Repository Dispatch Documentation](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
+- [Example Callback Workflow](./workflows/observepoint-audit-complete.yml)
 
-* Review the JSON payload printed by the callback workflow.
-* Make sure all **required inputs** are supplied.
-* Confirm Actions are enabled for the repository.
+## 📞 Support
 
----
-
-## 🔗Related Resources
-
-* **ObservePointAPIDocs** – [https://developer.observepoint.com/](https://developer.observepoint.com/)
-* **GitHubActions** – [https://docs.github.com/en/actions](https://docs.github.com/en/actions)
-* **Repository Dispatch API** – [https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
-
----
-
-## 📞Support
-
-* **Raise Issues** – open a ticket in this repo’s *Issues* tab.
-* **ObservePointSupport** – contact your CustomerSuccessManager.
-* **Docs & Guides** – [https://help.observepoint.com/](https://help.observepoint.com/)
+- **Issues**: [GitHub Issues](../../issues)
+- **ObservePoint Support**: Contact your customer success manager
+- **Documentation**: [ObservePoint Help Center](https://help.observepoint.com/)
 
 ---
 
