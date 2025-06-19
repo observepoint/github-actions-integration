@@ -49,15 +49,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start ObservePoint audit
-        uses: ./.github/actions/run_op_audit
+        uses: ./.github/actions/run_observepoint_audit
         with:
-          audit_id: '230171'
+          audit_id: '1149283'
           starting_urls: 'https://dominos.ua/uk/kyiv,https://dominos.ua/'
-          op_api_key: ${{ secrets.OP_API_KEY }}
+          observepoint_api_key: ${{ secrets.observepoint_api_key }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
           callback_event_type: 'observepoint-audit-complete'
           callback_ref: 'main'
-          callback_token: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.pull_request.number }}
           commit_sha: ${{ github.sha }}
+
+          callback_context_json: >
+            {
+              "env":      "staging"
+            }
