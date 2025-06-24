@@ -169,7 +169,34 @@ jobs:
         uses: ./.github/actions/run_observepoint_audit
         with:
           audit_id: '1149283'
-          starting_urls: 'https://dominos.ua/uk/kyiv,https://dominos.ua/'
+          starting_urls: 'https://app.example.com,https://api.example.com'
+          observepoint_api_key: ${{ secrets.observepoint_api_key }}
+          callback_owner: ${{ github.repository_owner }}
+          callback_repo:  ${{ github.event.repository.name }}
+          callback_event_type: 'observepoint-audit-complete'
+          callback_ref: 'main'
+          pr_number:  ${{ github.event.pull_request.number }}
+          commit_sha: ${{ github.sha }}
+          callback_context_json: >
+            {
+              "env": "staging"
+            }
+```
+
+### Example of the workflow with a single starting URL
+
+```yaml
+run_observepoint_audit:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start ObservePoint audit
+        uses: ./.github/actions/run_observepoint_audit
+        with:
+          audit_id: '1149283'
+          starting_urls: 'https://app.example.com'
           observepoint_api_key: ${{ secrets.observepoint_api_key }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo:  ${{ github.event.repository.name }}
