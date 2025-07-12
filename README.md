@@ -8,6 +8,7 @@ A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD p
 - **Secure Integration**: Uses encrypted secrets and fine-grained permissions
 - **Callback Support**: Automatically triggers follow-up workflows when audits complete via repository dispatch
 - **PR Integration**: Works seamlessly with pull request workflows
+- **Organization Whitelisting**: Secure access control through pre-approved GitHub organizations
 
 ## 🔄How It Works
 
@@ -28,6 +29,8 @@ sequenceDiagram
 3. **Repository Dispatch**: Upon completion, ObservePoint triggers your callback workflow via GitHub repository dispatch event
 4. **Process Results**: Your callback workflow handles the results and can notify your team
 
+> ⚠️ **Important**: To ensure proper access control, customers must contact ObservePoint customer support to provide their GitHub organization name for whitelisting before using this integration.
+
 ---
 
 ## 📋Prerequisites
@@ -35,6 +38,7 @@ sequenceDiagram
 Before getting started, ensure you have:
 
 - [ ] Active ObservePoint account with API access
+- [ ] GitHub organization whitelisted with ObservePoint (see Step 1 below)
 - [ ] ObservePoint Audit ID - found in the URL of your audit's page
 - [ ] GitHub repository with Actions enabled
 - [ ] Repository admin access for secrets management
@@ -45,16 +49,30 @@ Before getting started, ensure you have:
 2. Navigate to your desired audit
 3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
 
+---
 
 ## ⚙️ Setup & Configuration
 
-### Step 1: Get Your ObservePoint API Key
+### Step 1: Whitelist Your GitHub Organization
 
-1. Log in to ObservePoint.
-2. Open "Profile & Permissions".
-3. Generate a new key or copy an existing one.
+**⚠️ IMPORTANT**: Before using this integration, your GitHub organization must be whitelisted by ObservePoint.
 
-### Step 2: Configure GitHub Secrets
+1. Contact your ObservePoint customer support team
+2. Provide your **exact GitHub organization name** (case-sensitive)
+   - Find this in your repository URL: `https://github.com/{ORGANIZATION_NAME}/repo-name`
+   - Example: For `https://github.com/acme-corp/my-repo`, the organization name is `acme-corp`
+3. Request GitHub Actions integration enablement
+4. Wait for confirmation that your organization has been whitelisted
+
+> 💡 **Note**: This is a one-time setup per organization. All repositories within the whitelisted organization will have access to the integration.
+
+### Step 2: Get Your ObservePoint API Key
+
+1. Log in to ObservePoint
+2. Open "Profile & Permissions"
+3. Generate a new key or copy an existing one
+
+### Step 3: Configure GitHub Secrets
 
 Store your API key securely in your repository:
 
@@ -72,26 +90,24 @@ Store your API key securely in your repository:
 
 > 💡 **Note**: Repository secrets are encrypted and only accessible to workflows running in your repository. The API key will be masked in workflow logs for security.
 
-### Step 3: Create GitHub Personal Access Token (PAT)
+### Step 4: Install ObservePoint GitHub App
 
-1. **GitHub→ Settings → Developersettings → Personal access tokens → Fine‑grained tokens**.
-2. **Generate new token**.
-3. Configure:
+**⚠️ IMPORTANT**: The integration requires the ObservePoint GitHub App to be installed in your organization.
 
-    * **Name**: `ObservePoint‑Callback‑PAT`
-    * **Repositoryaccess**: *select the target repo only*
-    * **Repositorypermissions**:
-      • **Contents**:Read ✓•**Metadata**:Read ✓
-4. Generate & copy the token.
-5. Provide the token to your ObservePoint administrator for one‑time vault entry.
+1. Your organization admin will need to install the ObservePoint GitHub App with the following permissions:
+   - **Repository access**: Select the repositories that will use the integration
+   - **Repository permissions**:
+      - **Contents**: Read and Write ✓
+      - **Metadata**: Read ✓
+2. Wait for confirmation that the GitHub App has been installed and configured
 
-> ℹ️`repository_dispatch` needs only **read** scopes – safer than `workflow_dispatch`.
+> ℹ️ The ObservePoint GitHub App uses `repository_dispatch` to trigger callback workflows, which requires **Contents: Read and Write** permissions for proper functionality.
 
 ---
 
 ## 🔧Implementation
 
-### Primary WorkflowJob
+### Primary Workflow Job
 
 Add this job (or replace the legacy one) in your pipeline, e.g. `.github/workflows/ci.yml`:
 
@@ -286,14 +302,14 @@ jobs:
 ```yaml
 - uses: ./.github/actions/run_observepoint_audit
   with:
-    audit_id: '1149283'
-    starting_urls: 'https://example.com,https://app.example.com,https://api.example.com'
-    observepoint_api_key: ${{ secrets.observepoint_api_key }}
-    callback_owner: ${{ github.repository_owner }}
-    callback_repo:  ${{ github.event.repository.name }}
-    callback_event_type: 'observepoint-audit-complete'
-    callback_ref: 'main'
-    callback_context_json: '{"env":"prod","deploymentId":"42"}'
+     audit_id: '1149283'
+     starting_urls: 'https://example.com,https://app.example.com,https://api.example.com'
+     observepoint_api_key: ${{ secrets.observepoint_api_key }}
+     callback_owner: ${{ github.repository_owner }}
+     callback_repo:  ${{ github.event.repository.name }}
+     callback_event_type: 'observepoint-audit-complete'
+     callback_ref: 'main'
+     callback_context_json: '{"env":"prod","deploymentId":"42"}'
 ```
 
 > 💡 **Note**: The audit will run against all provided starting URLs
@@ -302,13 +318,19 @@ jobs:
 
 ### Common Issues
 
+**Organization not whitelisted:**
+- Ensure your GitHub organization has been whitelisted by ObservePoint support
+- Verify you provided the exact organization name (case-sensitive)
+- Check that the API call is coming from a repository within the whitelisted organization
+
 **Audit not triggering:**
 - Verify your `OBSERVEPOINT_API_KEY` secret is correctly set
 - Check that the audit ID exists and is accessible with your API key
+- Ensure your organization is whitelisted (see above)
 
 **Callback not working:**
 - Ensure the PAT has been provided to ObservePoint
-- Verify the PAT has `Contents: Read` and `Metadata: Read` permissions
+- Verify the PAT has `Contents: Read and Write` and `Metadata: Read` permissions
 - Check that the callback workflow file exists and listens for the correct `repository_dispatch` event type
 - Ensure the event type in your callback workflow matches the `callback_event_type` parameter
 
@@ -333,4 +355,4 @@ jobs:
 
 ---
 
-> 🚧**Coming Soon**– this action will be published on the GitHubMarketplace for one‑click installation.
+> 🚧**Coming Soon**– this action will be published on the GitHub Marketplace for one‑click installation.
