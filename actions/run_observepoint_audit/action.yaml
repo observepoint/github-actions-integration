@@ -2,10 +2,7 @@
 name: ObservePoint Audit (v3)
 
 description: |
-  Starts an ObservePoint web‑audit through the v3 API and checks
-  that the audit run is successfully created. Sends rich
-  callbackContext data so that a downstream workflow_dispatch
-  can process completion callbacks.
+  A GitHub Action that automatically triggers ObservePoint audits in CI/CD pipelines with secure callback handling.
 
 # ------------------------------------------------------------------------------
 # INPUTS
