@@ -127,8 +127,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Start ObservePoint audit
-        uses: ./.github/actions/run_observepoint_audit
+      - name: ObservePoint-Start-Audit
+        uses: observepoint/github-actions-integration@v1.0.0
         with:
           audit_id: 'YOUR_AUDIT_ID'
           starting_urls: 'https://example.com/,https://api.example.com/'
@@ -184,8 +184,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start ObservePoint audit
-        uses: ./.github/actions/run_observepoint_audit
+      - name: ObservePoint-Start-Audit
+        uses: observepoint/github-actions-integration@v1.0.0
         with:
           audit_id: '1149283'
           starting_urls: 'https://app.example.com,https://api.example.com'
@@ -211,8 +211,8 @@ run_observepoint_audit:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start ObservePoint audit
-        uses: ./.github/actions/run_observepoint_audit
+      - name: ObservePoint-Start-Audit
+        uses: observepoint/github-actions-integration@v1.0.0
         with:
           audit_id: '1149283'
           starting_urls: 'https://app.example.com'
@@ -289,7 +289,8 @@ jobs:
 ### Single Audit, Single URL
 
 ```yaml
-- uses: ./.github/actions/run_observepoint_audit
+- name: ObservePoint-Start-Audit
+  uses: observepoint/github-actions-integration@v1.0.0
   with:
     audit_id: '1149283'
     starting_urls: 'https://example.com'
@@ -303,7 +304,8 @@ jobs:
 ### Single Audit, Multiple URLs & Custom Context
 
 ```yaml
-- uses: ./.github/actions/run_observepoint_audit
+- name: ObservePoint-Start-Audit
+  uses: observepoint/github-actions-integration@v1.0.0
   with:
      audit_id: '1149283'
      starting_urls: 'https://example.com,https://app.example.com,https://api.example.com'
@@ -358,4 +360,16 @@ jobs:
 
 ---
 
-> 🚧**Coming Soon**– this action will be published on the GitHub Marketplace for one‑click installation.
+📝 Action Definition
+If you need to inspect or fork the action itself, you can find its source under
+[observepoint/github-actions-integration](./actions/run_observepoint_audit/action.yaml)
+
+---
+
+## 🛒 Available on GitHub Marketplace
+
+Get up and running in one click:
+
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-ObservePoint--GitHub--Actions--Integration-blue?logo=github)](https://github.com/marketplace/actions/observepoint-audit-v3)  
+
+*Install from the GitHub Marketplace*
