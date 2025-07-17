@@ -4,6 +4,10 @@ name: ObservePoint Audit (v3)
 description: |
   A GitHub Action that automatically triggers ObservePoint audits in CI/CD pipelines with secure callback handling.
 
+branding:
+  icon: bar-chart-2
+  color: yellow
+
 # ------------------------------------------------------------------------------
 # INPUTS
 # ------------------------------------------------------------------------------
