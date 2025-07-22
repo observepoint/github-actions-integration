@@ -40,7 +40,7 @@ sequenceDiagram
 
 Before getting started, ensure you have:
 
-- [ ] Active ObservePoint account with API access
+- [ ] Active ObservePoint account with ObservePoint API access
 - [ ] GitHub organization whitelisted with ObservePoint (see Step 1 in "Setup & Configuration" section below)
 - [ ] ObservePoint Audit ID - found in the URL of your audit's page
 - [ ] GitHub repository with [ObservePoint GitHub App](https://github.com/apps/observepoint-integration) installed and GitHub Actions enabled
@@ -92,7 +92,7 @@ Link to ObservePoint GitHub App: https://github.com/apps/observepoint-integratio
 
 ### Step 5: Configure GitHub Secrets
 
-Store your API key securely in your repository:
+Store your ObservePoint API key securely in your repository:
 
 1. Navigate to your repository on GitHub
 2. Click on the **Settings** tab (located at the top of your repository page)
@@ -106,7 +106,7 @@ Store your API key securely in your repository:
     - **Secret**: Paste your ObservePoint API key value
 9. Click **Add secret** to save
 
-> 💡 **Note**: Repository secrets are encrypted and only accessible to workflows running in your repository. The API key will be masked in workflow logs for security.
+> 💡 **Note**: Repository secrets are encrypted and only accessible to workflows running in your repository. The ObservePoint API key will be masked in workflow logs for security.
 
 
 ---
@@ -152,7 +152,7 @@ jobs:
 ```
 
 
-## 📊Input Parameters for the Primary Workflow
+## 📊 Input Parameters for the Primary Workflow
 
 | Parameter               | Required | Description                                       | Example                                         |
 | ----------------------- | -------- | ------------------------------------------------- | ----------------------------------------------- |
@@ -293,7 +293,7 @@ jobs:
 
 ---
 
-## 📚Usage Examples
+## 📚 Usage Examples
 
 ### Single Audit, Single URL
 
@@ -339,7 +339,7 @@ jobs:
 
 **Audit not triggering:**
 - Verify your `OBSERVEPOINT_API_KEY` secret is correctly set
-- Check that the audit ID exists and is accessible with your API key
+- Check that the audit ID exists and is accessible with your ObservePoint API key
 - Ensure your organization is whitelisted (see above)
 
 **Callback not working:**
