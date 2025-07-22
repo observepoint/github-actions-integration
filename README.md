@@ -10,7 +10,7 @@ A GitHub Action that seamlessly integrates ObservePoint audits into your CI/CD p
 - **PR Integration**: Works seamlessly with pull request workflows
 - **Organization Whitelisting**: Secure access control through pre-approved GitHub organizations
 
-## 🔄How It Works
+## 🔄 How It Works
 
 ```mermaid
 sequenceDiagram
@@ -32,25 +32,19 @@ sequenceDiagram
 4. **Repository Dispatch**: The ObservePoint GitHub App triggers your callback workflow via GitHub repository dispatch event
 5. **Process Results**: Your callback workflow handles the results and can notify your team
 
-> ⚠️ **Important**: To ensure proper access control, customers must contact ObservePoint customer support to provide their GitHub organization name for whitelisting before using this integration.
+### ⚠️ **Important**: To ensure proper access control, customers must contact ObservePoint customer support to provide their GitHub organization name for whitelisting before using this integration.
 
 ---
 
-## 📋Prerequisites
+## 📋 Prerequisites
 
 Before getting started, ensure you have:
 
 - [ ] Active ObservePoint account with API access
-- [ ] GitHub organization whitelisted with ObservePoint (see Step 1 below)
+- [ ] GitHub organization whitelisted with ObservePoint (see Step 1 in "Setup & Configuration" section below)
 - [ ] ObservePoint Audit ID - found in the URL of your audit's page
-- [ ] GitHub repository with Actions enabled
+- [ ] GitHub repository with [ObservePoint GitHub App](https://github.com/apps/observepoint-integration) installed and GitHub Actions enabled
 - [ ] Repository admin access for secrets management
-
-## 🔍 Finding Your Audit ID
-
-1. Log in to ObservePoint
-2. Navigate to your desired audit
-3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
 
 ---
 
@@ -75,7 +69,28 @@ Before getting started, ensure you have:
 2. Open "Profile & Permissions"
 3. Generate a new key or copy an existing one
 
-### Step 3: Configure GitHub Secrets
+### Step 3: Find Your Audit ID
+
+1. Log in to ObservePoint
+2. Navigate to your desired audit
+3. The Audit ID is in the URL: `https://app.observepoint.com/audits/{AUDIT_ID}`
+
+### Step 4: Install ObservePoint GitHub App
+
+**⚠️ IMPORTANT**: The integration requires the ObservePoint GitHub App to be installed in your organization.
+
+Link to ObservePoint GitHub App: https://github.com/apps/observepoint-integration
+
+1. Your organization admin will need to install the ObservePoint GitHub App with the following permissions:
+   - **Repository access**: Select the repositories that will use the integration
+   - **Repository permissions**:
+      - **Contents**: Read and Write ✓
+      - **Metadata**: Read ✓
+2. Wait for confirmation that the GitHub App has been installed and configured
+
+> ℹ️ The ObservePoint GitHub App uses `repository_dispatch` to trigger callback workflows, which requires **Contents: Read and Write** permissions for proper functionality.
+
+### Step 5: Configure GitHub Secrets
 
 Store your API key securely in your repository:
 
@@ -93,24 +108,14 @@ Store your API key securely in your repository:
 
 > 💡 **Note**: Repository secrets are encrypted and only accessible to workflows running in your repository. The API key will be masked in workflow logs for security.
 
-### Step 4: Install ObservePoint GitHub App
-
-**⚠️ IMPORTANT**: The integration requires the ObservePoint GitHub App to be installed in your organization.
-
-1. Your organization admin will need to install the ObservePoint GitHub App with the following permissions:
-    - **Repository access**: Select the repositories that will use the integration
-    - **Repository permissions**:
-        - **Contents**: Read and Write ✓
-        - **Metadata**: Read ✓
-2. Wait for confirmation that the GitHub App has been installed and configured
-
-> ℹ️ The ObservePoint GitHub App uses `repository_dispatch` to trigger callback workflows, which requires **Contents: Read and Write** permissions for proper functionality.
 
 ---
 
-## 🔧Implementation
+## 🔧 Implementation
 
 ### Primary Workflow Job
+
+This is the workflow triggered in every run of your CI/CD pipeline to start an ObservePoint audit.
 
 Add this job (or replace the legacy one) in your pipeline, e.g. `.github/workflows/ci.yml`:
 
@@ -146,7 +151,24 @@ jobs:
             }
 ```
 
-### Complete Workflow Example (build → test → deploy → audit)
+
+## 📊Input Parameters for the Primary Workflow
+
+| Parameter               | Required | Description                                       | Example                                         |
+| ----------------------- | -------- | ------------------------------------------------- | ----------------------------------------------- |
+| `audit_id`              | ✅        | ObservePoint audit ID to start                    | `'1149283'`                                     |
+| `starting_urls`         | ✅        | Comma‑separated list of starting URLs             | `'https://example.com,https://app.example.com'` |
+| `observepoint_api_key`  | ✅        | ObservePoint API key (secret)                     | `${{ secrets.observepoint_api_key }}`           |
+| `callback_owner`        | ✅        | GitHub organisation/user owning the callback repo | `${{ github.repository_owner }}`                |
+| `callback_repo`         | ✅        | Repository name containing the callback workflow  | `${{ github.event.repository.name }}`           |
+| `callback_event_type`   | ✅        | Event type for `repository_dispatch`              | `'observepoint-audit-complete'`                 |
+| `callback_ref`          | ✅        | Git ref / branch on which to run the callback     | `'main'`                                        |
+| `callback_context_json` | ❌        | JSON (string) merged into `callbackContext`       | `'{"env":"staging"}'`                           |
+| `pr_number`             | ❌        | Pull‑request number (omit on push)                | `${{ github.event.pull_request.number }}`       |
+| `commit_sha`            | ❌        | Commit SHA for traceability                       | `${{ github.sha }}`                             |
+
+
+### Full Workflow Example (build → test → deploy → audit)
 
 ```yaml
 name: Call ObservePoint Audit
@@ -229,9 +251,13 @@ run_observepoint_audit:
             }
 ```
 
+---
+
 ### Callback Workflow
 
-Create `.github/workflows/audit-complete.yml` to handle audit completion via repository dispatch:
+This workflow will be triggered when the ObservePoint audit completes. It processes the results and can fail the build if alerts are detected.
+
+Create a file like `.github/workflows/audit-complete.yml` to handle audit completion via repository dispatch:
 
 ```yaml
 name: Audit Complete Handler
@@ -264,23 +290,6 @@ jobs:
             echo "✅ Audit passed – no alerts"
           fi
 ```
-
----
-
-## 📊Input Parameters
-
-| Parameter               | Required | Description                                       | Example                                         |
-| ----------------------- | -------- | ------------------------------------------------- | ----------------------------------------------- |
-| `audit_id`              | ✅        | ObservePoint audit ID to start                    | `'1149283'`                                     |
-| `starting_urls`         | ✅        | Comma‑separated list of starting URLs             | `'https://example.com,https://app.example.com'` |
-| `observepoint_api_key`  | ✅        | ObservePoint API key (secret)                     | `${{ secrets.observepoint_api_key }}`           |
-| `callback_owner`        | ✅        | GitHub organisation/user owning the callback repo | `${{ github.repository_owner }}`                |
-| `callback_repo`         | ✅        | Repository name containing the callback workflow  | `${{ github.event.repository.name }}`           |
-| `callback_event_type`   | ✅        | Event type for `repository_dispatch`              | `'observepoint-audit-complete'`                 |
-| `callback_ref`          | ✅        | Git ref / branch on which to run the callback     | `'main'`                                        |
-| `callback_context_json` | ❌        | JSON (string) merged into `callbackContext`       | `'{"env":"staging"}'`                           |
-| `pr_number`             | ❌        | Pull‑request number (omit on push)                | `${{ github.event.pull_request.number }}`       |
-| `commit_sha`            | ❌        | Commit SHA for traceability                       | `${{ github.sha }}`                             |
 
 ---
 
