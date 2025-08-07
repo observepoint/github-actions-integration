@@ -362,7 +362,7 @@ jobs:
 - [ObservePoint API Documentation](https://developer.observepoint.com/)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [GitHub Repository Dispatch Documentation](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event)
-- [Example Callback Workflow](./workflows/observepoint-audit-complete.yml)
+- [Example Callback Workflow](workflow-examples/observepoint-audit-complete.yml)
 
 ## 📞 Support
 
@@ -374,7 +374,7 @@ jobs:
 
 📝 Action Definition
 If you need to inspect or fork the action itself, you can find its source under
-[observepoint/github-actions-integration](./actions/run_observepoint_audit/action.yaml)
+[observepoint/github-actions-integration](action.yaml)
 
 ---
 

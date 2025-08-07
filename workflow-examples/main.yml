@@ -49,10 +49,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start ObservePoint audit
-        uses: ./.github/actions/run_observepoint_audit
+        uses: observepoint/github-actions-integration@v1.0.0
         with:
           audit_id: '1149283'
-          starting_urls: 'https://dominos.ua/uk/kyiv,https://dominos.ua/'
+          starting_urls: 'https://example.com/,https://api.example.com/'
           observepoint_api_key: ${{ secrets.observepoint_api_key }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}
