@@ -21,9 +21,9 @@ inputs:
     description: 'Audit ID to start.'
     required: true
 
-  # The initial URL(s) for the audit. Comma‑separated.
+  # The initial URL(s) for the audit. Comma‑separated or newline-delimited.
   starting_urls:
-    description: 'Comma‑separated list of starting URLs passed to startingUrls.'
+    description: 'Comma‑separated or newline-delimited list of starting URLs passed to startingUrls.'
     required: true
 
   # ObservePoint API key stored in repo / org secrets
@@ -68,11 +68,19 @@ runs:
       run: |
         set -euo pipefail
 
-        # Split comma‑separated starting URLs into array
-        IFS=',' read -r -a starting_urls_list <<< "${{ inputs.starting_urls }}"
+        # Process starting URLs: support both comma-separated and newline-delimited formats
+        starting_urls_raw="${{ inputs.starting_urls }}"
 
-        # Build JSON array for startingUrls
-        starting_urls_json=$(printf '%s\n' "${starting_urls_list[@]}" | jq -R . | jq -s .)
+        # Normalize line endings
+        starting_urls_raw="${starting_urls_raw//\\n/$'\n'}"
+
+        starting_urls_json=$(echo "$starting_urls_raw"
+                             | tr ',' '\n'                                      # Replace commas with newlines
+                             | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'        # Trim whitespace from each line
+                             | grep -v '^$'                                     # Remove empty lines
+                             | jq -R .                                          # Сonverts each line into a JSON string
+                             | jq -s .                                          # Collects all JSON strings into an array
+        )
 
         audit_id="${{ inputs.audit_id }}"
         echo "📣 Triggering audit ID ${audit_id} …"

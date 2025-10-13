@@ -160,7 +160,7 @@ jobs:
 | Parameter               | Required | Description                                       | Example                                         |
 | ----------------------- | -------- | ------------------------------------------------- | ----------------------------------------------- |
 | `audit_id`              | ✅        | ObservePoint audit ID to start                    | `'1149283'`                                     |
-| `starting_urls`         | ✅        | Comma‑separated list of starting URLs             | `'https://example.com,https://app.example.com'` |
+| `starting_urls`         | ✅        | Comma‑separated or newline-delimited list of starting URLs | `'https://example.com,https://app.example.com'` |
 | `observepoint_api_key`  | ✅        | ObservePoint API key (secret)                     | `${{ secrets.observepoint_api_key }}`           |
 | `callback_owner`        | ✅        | GitHub organisation (or user) owning the callback repo | - `${{ github.repository_owner }}` <br/> - `acme` |
 | `callback_repo`         | ✅        | Repository name containing the callback workflow  | `${{ github.event.repository.name }}`           |
@@ -313,7 +313,7 @@ jobs:
     callback_ref: 'main'
 ```
 
-### Single Audit, Multiple URLs & Custom Context
+### Single Audit, Multiple URLs (Comma-Separated) & Custom Context
 
 ```yaml
 - name: ObservePoint-Start-Audit
@@ -329,7 +329,25 @@ jobs:
      callback_context_json: '{"env":"prod","deploymentId":"42"}'
 ```
 
-💡 **Note**: The audit will run against all provided starting URLs
+### Single Audit, Multiple URLs (Newline-Delimited)
+
+```yaml
+- name: ObservePoint-Start-Audit
+  uses: observepoint/github-actions-integration@v1.0.0
+  with:
+     audit_id: '1149283'
+     starting_urls: |
+       https://example.com
+       \n https://app.example.com
+       https://api.example.com
+     observepoint_api_key: ${{ secrets.observepoint_api_key }}
+     callback_owner: ${{ github.repository_owner }}
+     callback_repo:  ${{ github.event.repository.name }}
+     callback_event_type: 'observepoint-audit-complete'
+     callback_ref: 'main'
+```
+
+💡 **Note**: The audit will run against all provided starting URLs. You can use either comma-separated or newline-delimited format.
 
 ## 🐛 Troubleshooting
 
