@@ -38,7 +38,7 @@ inputs:
     description: 'Repository that contains the workflow to consume the callback.'
     required: true
   callback_event_type:
-    description: 'Event type name name (e.g. observepoint-audit-complete) that will be triggered by repository_dispatch.'
+    description: 'Event type name (e.g. observepoint-audit-complete) that will be triggered by repository_dispatch.'
     required: true
   callback_ref:
     description: 'Git ref (branch) to run the downstream workflow on.'
@@ -74,11 +74,11 @@ runs:
         # Normalize line endings
         starting_urls_raw="${starting_urls_raw//\\n/$'\n'}"
 
-        starting_urls_json=$(echo "$starting_urls_raw" |
+        starting_urls_json=$(printf '%s\n' "$starting_urls_raw" |
                              tr ',' '\n' |                                      # Replace commas with newlines
                              sed 's/^[[:space:]]*//;s/[[:space:]]*$//' |        # Trim whitespace from each line
                              grep -v '^$' |                                     # Remove empty lines
-                             jq -R . |                                          # Сonverts each line into a JSON string
+                             jq -R . |                                          # Converts each line into a JSON string
                              jq -s .                                            # Collects all JSON strings into an array
         )
 
