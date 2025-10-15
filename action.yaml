@@ -81,7 +81,7 @@ runs:
         # Build JSON array, handling empty input
         if [[ -z "$starting_urls_raw" ]]; then
           starting_urls_json='[]'
-          echo "ℹ️  No starting URLs provided, using empty array"
+          echo "ℹ️  No starting URLs provided, trying to use URLs from config"
         else
           starting_urls_json=$(printf '%s\n' "$starting_urls_raw" |
                                tr ',' '\n' |                                      # Replace commas with newlines
