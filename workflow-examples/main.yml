@@ -52,7 +52,11 @@ jobs:
         uses: observepoint/github-actions-integration@v1.0.0
         with:
           audit_id: '1149283'
-          starting_urls: 'https://example.com/,https://api.example.com/'
+          # URLs can be comma-separated or newline-delimited (or mixed)
+          starting_urls: |
+            https://example.com/,https://example.com/products
+            https://example.com/about,https://api.example.com/
+            https://app.example.com/dashboard
           observepoint_api_key: ${{ secrets.observepoint_api_key }}
           callback_owner: ${{ github.repository_owner }}
           callback_repo: ${{ github.event.repository.name }}

@@ -21,10 +21,10 @@ inputs:
     description: 'Audit ID to start.'
     required: true
 
-  # The initial URL(s) for the audit. Comma‑separated.
+  # The initial URL(s) for the audit. Comma‑separated or newline-delimited.
   starting_urls:
-    description: 'Comma‑separated list of starting URLs passed to startingUrls.'
-    required: true
+    description: 'Comma‑separated or newline-delimited list of starting URLs passed to startingUrls.'
+    required: false
 
   # ObservePoint API key stored in repo / org secrets
   observepoint_api_key:
@@ -34,15 +34,19 @@ inputs:
   callback_owner:
     description: 'GitHub owner / organisation for the callback repository.'
     required: true
+
   callback_repo:
     description: 'Repository that contains the workflow to consume the callback.'
     required: true
+
   callback_event_type:
-    description: 'Event type name name (e.g. observepoint-audit-complete) that will be triggered by repository_dispatch.'
+    description: 'Event type name (e.g. observepoint-audit-complete) that will be triggered by repository_dispatch.'
     required: true
+
   callback_ref:
     description: 'Git ref (branch) to run the downstream workflow on.'
     required: true
+
   callback_context_json:
     description: |
       Optional JSON object (stringified) that will be *merged* into
@@ -68,11 +72,25 @@ runs:
       run: |
         set -euo pipefail
 
-        # Split comma‑separated starting URLs into array
-        IFS=',' read -r -a starting_urls_list <<< "${{ inputs.starting_urls }}"
+        # Process starting URLs: support both comma-separated and newline-delimited formats
+        starting_urls_raw="${{ inputs.starting_urls }}"
 
-        # Build JSON array for startingUrls
-        starting_urls_json=$(printf '%s\n' "${starting_urls_list[@]}" | jq -R . | jq -s .)
+        # Normalize line endings
+        starting_urls_raw="${starting_urls_raw//\\n/$'\n'}"
+
+        # Build JSON array, handling empty input
+        if [[ -z "$starting_urls_raw" ]]; then
+          starting_urls_json='[]'
+          echo "ℹ️  No starting URLs provided, trying to use URLs from config"
+        else
+          starting_urls_json=$(printf '%s\n' "$starting_urls_raw" |
+                               tr ',' '\n' |                                      # Replace commas with newlines
+                               sed 's/^[[:space:]]*//;s/[[:space:]]*$//' |        # Trim whitespace from each line
+                               grep -v '^$' |                                     # Remove empty lines
+                               jq -R . |                                          # Converts each line into a JSON string
+                               jq -s .                                            # Collects all JSON strings into an array
+          )
+        fi
 
         audit_id="${{ inputs.audit_id }}"
         echo "📣 Triggering audit ID ${audit_id} …"
@@ -90,13 +108,12 @@ runs:
         --arg pr                        "${{ inputs.pr_number }}" \
         --arg commitSha                 "${{ inputs.commit_sha }}" \
         --argjson userContext           "$user_ctx" \
-        '{
-           startingUrls: $startingUrls,
+        '(if ($startingUrls | length) > 0 then {startingUrls: $startingUrls} else {} end) + {
            callbackWorkflowEventType: $callbackWorkflowEventType,
            callbackRepositoryOwner:   $callbackRepositoryOwner,
            callbackRepositoryName:    $callbackRepositoryName,
            callbackContext: (
-             $userContext +              
+             $userContext +
              {
                ref:       $ref,
                prNumber:  $pr,
