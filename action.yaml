@@ -60,6 +60,10 @@ inputs:
     required: false
     default: ''
 
+  maxPages:
+    description: 'Optional maximum number of pages to scan (overrides audit configuration).'
+    required: false
+
 # ------------------------------------------------------------------------------
 # EXECUTION ---------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -107,8 +111,10 @@ runs:
         --arg ref                       "${{ inputs.callback_ref }}" \
         --arg pr                        "${{ inputs.pr_number }}" \
         --arg commitSha                 "${{ inputs.commit_sha }}" \
+        --arg maxPages                  "${{ inputs.maxPages }}" \
         --argjson userContext           "$user_ctx" \
-        '(if ($startingUrls | length) > 0 then {startingUrls: $startingUrls} else {} end) + {
+        '(if ($startingUrls | length) > 0 then {startingUrls: $startingUrls} else {} end) + 
+         (if ($maxPages | length) > 0 then {maxPages: ($maxPages | tonumber)} else {} end) + {
            callbackWorkflowEventType: $callbackWorkflowEventType,
            callbackRepositoryOwner:   $callbackRepositoryOwner,
            callbackRepositoryName:    $callbackRepositoryName,
